@@ -18,6 +18,15 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* The read-only boundary: a non-loopback page sees the roster but no
+   actions, so the note explains where management lives instead of offering
+   gestures the host wire refuses. */
+.manageNote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
 /* Cards, not rows: a preset is a thing you pick, and the description is the
    part that tells them apart — a row would bury it beside the actions. */
 .group {

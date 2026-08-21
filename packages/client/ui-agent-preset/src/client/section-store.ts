@@ -77,6 +77,13 @@ export interface AgentPresetSectionState {
   authorable: boolean
   /** Whether the host can open a preset directory on a native desktop. */
   hasDocument: boolean
+  /**
+   * Whether this browser may manage the roster. The host pins the authoring
+   * methods (`agentPreset.read/copy/openDocument/remove`) and the default
+   * write (`settings.update`) to loopback-same-origin pages, so a
+   * non-loopback browser sees the roster read-only.
+   */
+  manageable: boolean
   /** Every preset the deployment currently supplies. */
   rows: readonly PresetRow[]
   /** The open copy dialog, or null. */
@@ -99,6 +106,7 @@ const INITIAL: AgentPresetSectionState = {
   error: null,
   authorable: false,
   hasDocument: false,
+  manageable: true,
   rows: [],
   copy: null,
   view: null,
@@ -143,6 +151,13 @@ export class AgentPresetSectionController {
      * offer now exists.
      */
     private readonly rosterChanged: () => void = () => {},
+    /**
+     * Whether this browser is loopback-same-origin with the host. The host
+     * gates the authoring methods and the default write to loopback pages, so
+     * a non-loopback browser gets a read-only roster instead of actions the
+     * wire would refuse.
+     */
+    private readonly manageable: boolean = true,
   ) {}
 
   private set(patch: Partial<AgentPresetSectionState>): void {
@@ -167,7 +182,10 @@ export class AgentPresetSectionController {
     const { presets, authorable, hasDocument } = roster
     if (presets.length === 0) {
       // Nothing to manage leaves nothing to keep a dialog open over.
-      this.set({ status: 'unavailable', rows: [], authorable, hasDocument, copy: null, view: null })
+      this.set({
+        status: 'unavailable', rows: [], authorable, hasDocument,
+        manageable: this.manageable, copy: null, view: null,
+      })
       return
     }
     // A reveal outlives a reload but not its preset: a path for a row the
@@ -180,6 +198,7 @@ export class AgentPresetSectionController {
       error: null,
       authorable,
       hasDocument,
+      manageable: this.manageable,
       rows: presets.map(preset => ({ ...preset })),
       revealedPaths: kept,
     })

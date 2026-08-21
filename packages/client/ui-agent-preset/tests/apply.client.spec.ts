@@ -70,7 +70,7 @@ const ROSTER_MOVED = {
   },
 }
 
-async function bench() {
+async function bench(loopback = true) {
   const ctx = new Context()
   // The host's answer, mutable so a spec can move the default the way the
   // settings surface does and watch who re-reads it.
@@ -85,6 +85,7 @@ async function bench() {
   new TestRemote(ctx)
   const calls: string[] = []
   ctx.provide('connection', {
+    isLoopback: loopback,
     api: {
       agentPresets: {
         list: () => { calls.push('list'); return Promise.resolve(ROSTER) },
@@ -252,6 +253,20 @@ describe('ui-agent-preset apply', () => {
     expect(calls).toContain('copy:mine')
     expect(calls.filter(call => call === 'openDocument:mine').length).toBeGreaterThan(0)
     expect(section.hooks.agentPresetSection.getSnapshot().rows).toHaveLength(2)
+  })
+
+  it('marks the section read-only on a non-loopback page', async () => {
+    const { ctx, slots } = await bench(false)
+    declareRoot(slots)
+    await ctx.plugin({ inject: [...inject], apply }).await()
+    const section = (slots.entries('settings.section')[0]!.inject as unknown as () => AgentPresetSectionInjected)()
+
+    await section.load()
+
+    // The host gates the authoring methods to loopback, so the section the
+    // roster renders must not claim management a remote wire would refuse.
+    expect(section.hooks.agentPresetSection.getSnapshot().manageable).toBe(false)
+    expect(section.hooks.agentPresetSection.getSnapshot().rows).toHaveLength(1)
   })
 
   it('refreshes a showing surface when its namespace changes, and ignores others', async () => {

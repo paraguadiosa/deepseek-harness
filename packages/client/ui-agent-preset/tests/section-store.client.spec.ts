@@ -41,6 +41,8 @@ interface FakeOptions {
   authorable?: boolean
   /** Whether the host can open a preset directory on a desktop. */
   hasDocument?: boolean
+  /** Whether this browser is loopback-same-origin with the host. */
+  manageable?: boolean
   /** Hold `remove` until this resolves, to observe the in-flight state. */
   holdRemove?: Promise<void>
 }
@@ -149,6 +151,7 @@ function harness(options: FakeOptions = {}) {
   const controller = new AgentPresetSectionController(
     fakeApi(presets, defaultId, { ...options, calls: options.calls ?? calls }),
     () => { rosterChanges += 1 },
+    options.manageable ?? true,
   )
   return { controller, presets, defaultId, calls, rosterChanges: () => rosterChanges }
 }
@@ -180,6 +183,27 @@ describe('loading the roster', () => {
     await controller.load()
 
     expect(controller.store.getSnapshot().status).toBe('unavailable')
+  })
+
+  it('flags a non-loopback browser as read-only', async () => {
+    const { controller } = harness({ manageable: false })
+
+    await controller.load()
+
+    const state = controller.store.getSnapshot()
+    expect(state.status).toBe('ready')
+    expect(state.manageable).toBe(false)
+    // The roster still renders: `agentPreset.list` is not loopback-gated, so
+    // a remote browser may see what the deployment offers.
+    expect(state.rows.map(row => row.id)).toEqual(['standard', 'mine'])
+  })
+
+  it('keeps management on a loopback page', async () => {
+    const { controller } = harness({ manageable: true })
+
+    await controller.load()
+
+    expect(controller.store.getSnapshot().manageable).toBe(true)
   })
 
   it('keeps one load in flight rather than stacking reads', async () => {
