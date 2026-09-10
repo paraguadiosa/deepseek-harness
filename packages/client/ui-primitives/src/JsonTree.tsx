@@ -6,6 +6,7 @@ import type {
   ReactNode,
   UIEvent as ReactUIEvent,
 } from 'react'
+import { writeClipboard } from './clipboard.ts'
 import { IconCheckOutline16, IconCopyOutline16 } from './icons/index.tsx'
 import { Menu } from './Menu.tsx'
 import type { MenuEntry } from './Menu.tsx'
@@ -530,12 +531,10 @@ export function JsonTree({
   const copy = async (mode: 'json' | 'path' | 'prettyJson' | 'value') => {
     /* v8 ignore next -- copy controls only render while their target exists. */
     if (copyTarget === undefined) return
-    try {
-      await navigator.clipboard.writeText(copyText(copyTarget, mode))
-      setCopyState('copied')
-    } catch {
-      setCopyState('failed')
-    }
+    // Shared helper: navigator.clipboard is absent on insecure origins, so the
+    // execCommand fallback is what makes these controls work on a plain-HTTP page.
+    const accepted = await writeClipboard(copyText(copyTarget, mode))
+    setCopyState(accepted ? 'copied' : 'failed')
     if (resetTimer.current !== undefined) clearTimeout(resetTimer.current)
     resetTimer.current = setTimeout(() => { setCopyState('idle') }, 1_500)
   }
