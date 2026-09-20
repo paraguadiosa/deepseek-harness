@@ -15,6 +15,7 @@ export type AgentPresetSettingsKey =
   | 'composition' | 'cancel' | 'close' | 'retry'
   | 'copyTitle' | 'copyIntro' | 'create' | 'creating' | 'creatorDraft'
   | 'openLocation' | 'showLocation' | 'revealedPathLabel'
+  | 'manageOnHost'
   | 'idRequired' | 'idInvalid' | 'idTaken'
   | 'deleteTitle' | 'deleteDescription' | 'deleteConfirm' | 'deleting'
 
@@ -74,6 +75,7 @@ export const en: Record<AgentPresetSettingsKey, string> = {
   openLocation: 'Open folder',
   showLocation: 'Show location',
   revealedPathLabel: 'Preset files:',
+  manageOnHost: 'Preset management is only available on the host machine.',
   idRequired: 'Give the preset an identifier.',
   idInvalid: 'Use lowercase letters, digits, and hyphens, starting with a letter or digit.',
   idTaken: 'A preset with this identifier already exists.',
@@ -132,6 +134,7 @@ export const zh: Record<AgentPresetSettingsKey, string> = {
   openLocation: '打开目录',
   showLocation: '查看路径',
   revealedPathLabel: '预设文件：',
+  manageOnHost: '预设管理仅可在主机上进行。',
   idRequired: '请填写标识符。',
   idInvalid: '只能使用小写字母、数字与连字符，且以字母或数字开头。',
   idTaken: '该标识符已被占用。',

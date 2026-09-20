@@ -22,6 +22,7 @@ const READY: AgentPresetSectionState = {
   error: null,
   authorable: true,
   hasDocument: true,
+  manageable: true,
   rows: [
     { id: 'standard', trust: 'system', isDefault: true, name: '标准模式', description: '完整的编码 agent。' },
     { id: 'mine', trust: 'user', isDefault: false },
@@ -195,6 +196,24 @@ describe('the preset list', () => {
     expect(duplicate.getAttribute('data-tip')).toBe(en.brokenNoCopy)
     expect(within(ghost).getByRole('button', { name: `${en.delete}: 幽灵预设` })).toBeTruthy()
     expect(within(ghost).getByRole('button', { name: `${en.openLocation}: 幽灵预设` })).toBeTruthy()
+  })
+
+  it('renders the roster read-only on a non-loopback page', () => {
+    renderSection({ manageable: false })
+
+    // The host pins the authoring plane to loopback pages: the cards still
+    // show what the deployment offers, but no action the wire would refuse.
+    expect(screen.getByText(en.manageOnHost)).toBeTruthy()
+    const standard = rowFor('standard')
+    expect(within(standard).queryByRole('button', { name: `${en.view}: ${en.presetStandardName}` })).toBeNull()
+    expect(within(standard).queryByRole('button', { name: `${en.duplicate}: ${en.presetStandardName}` })).toBeNull()
+    const mine = rowFor('mine')
+    expect(within(mine).queryByRole('button', { name: `${en.openLocation}: mine` })).toBeNull()
+    expect(within(mine).queryByRole('button', { name: `${en.delete}: mine` })).toBeNull()
+    // The card body is not a control either: picking is management.
+    expect(within(mine).getByRole('button', { name: `${en.setDefault}: mine` })).toHaveProperty('disabled', true)
+    // No creator entry without management: the section is a read-only view.
+    expect(screen.queryByText(en.creatorDraft)).toBeNull()
   })
 
   it('withholds the viewer on a broken shipped preset', () => {

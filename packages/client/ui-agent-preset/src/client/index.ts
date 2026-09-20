@@ -53,7 +53,7 @@ export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope
  * @param ctx - the browser plugin context.
  */
 export function apply(ctx: ClientContext): void {
-  const { api } = ctx.get('connection') as ConnectionHandle
+  const { api, isLoopback } = ctx.get('connection') as ConnectionHandle
   const controller = new AgentPresetSettingsController(api, ctx.settingsScope.describe())
   // One roster, four surfaces. The chip is registered in a later scope, so it
   // subscribes here rather than being reached from this one.
@@ -61,7 +61,7 @@ export function apply(ctx: ClientContext): void {
   const section = new AgentPresetSectionController(api, () => {
     void controller.load()
     for (const read of rosterReaders) read()
-  })
+  }, isLoopback)
 
   ctx.effect(() => ctx.locale.register('settings.agentPreset', { zh, en }), 'ui-agent-preset: settings row dictionaries')
 

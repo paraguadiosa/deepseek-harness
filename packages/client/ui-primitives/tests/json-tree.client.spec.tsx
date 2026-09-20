@@ -262,6 +262,20 @@ describe('JsonTree', () => {
     view.unmount()
   })
 
+  it('copies through the execCommand fallback when the async clipboard API is absent', async () => {
+    // Insecure origin: the browser does not expose navigator.clipboard.
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+    const exec = vi.fn().mockReturnValue(true)
+    Object.defineProperty(document, 'execCommand', { configurable: true, value: exec })
+
+    render(<JsonTree data={{ value: 'x' }} />)
+    fireEvent.mouseOver(screen.getByRole('treeitem'))
+    fireEvent.click(screen.getByRole('button', { name: 'Copy value' }))
+
+    await waitFor(() => { expect(exec).toHaveBeenCalledWith('copy') })
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeDefined()
+  })
+
   it('keeps copy placement synchronized and clears stale targets', () => {
     const view = render(<JsonTree data={{ first: { a: 1 }, second: 2 }} />)
     const root = view.container.firstElementChild as HTMLElement
